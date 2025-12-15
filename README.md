@@ -8,7 +8,7 @@
   
   <p>
     <a href="https://github.com/lbjlaq/Antigravity-Manager">
-      <img src="https://img.shields.io/badge/Version-2.1.1-blue?style=flat-square" alt="Version">
+      <img src="https://img.shields.io/badge/Version-2.1.2-blue?style=flat-square" alt="Version">
     </a>
     <img src="https://img.shields.io/badge/Tauri-v2-orange?style=flat-square" alt="Tauri">
     <img src="https://img.shields.io/badge/React-18-61DAFB?style=flat-square" alt="React">
@@ -170,7 +170,7 @@ sudo xattr -rd com.apple.quarantine "/Applications/Antigravity Tools.app"
 
 ## 📅 更新日志 (Changelog)
 
-### v2.1.1 (2025-12-16)
+### v2.1.2 (2025-12-16)
 - **🪟 Windows 兼容性**: 修复了在 Windows 下无法打开数据目录的问题。
 - **📁 路径显示**: 设置页面现在显示数据目录的完整绝对路径，方便查找。
 
