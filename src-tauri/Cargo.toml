@@ -41,6 +41,8 @@ thiserror = "2.0.17"
 
 # 反代服务依赖
 axum = { version = "0.7", features = ["multipart"] }
+tokio-stream = { version = "0.1.17", features = ["sync"] }
+
 hyper = { version = "1", features = ["full"] }
 hyper-util = { version = "0.1", features = ["full"] }
 tower = "0.4"
@@ -59,4 +61,3 @@ tauri-plugin-single-instance = { version = "2.3.6", features = ["deep-link"] }
 tracing-appender = "0.2.4"
 tracing-log = "0.2.0"
 tauri-plugin-autostart = "2.5.1"
-tokio-stream = { version = "0.1.17", features = ["sync"] }
