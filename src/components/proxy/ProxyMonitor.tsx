@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { listen } from '@tauri-apps/api/event';
 import ModalDialog from '../common/ModalDialog';
 import { useTranslation } from 'react-i18next';
 import { request as invoke } from '../../utils/request';
 import { Trash2, Search, X } from 'lucide-react';
 import { AppConfig } from '../../types/config';
 import { formatCompactNumber } from '../../utils/format';
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 interface ProxyRequestLog {
     id: string;
@@ -78,18 +80,25 @@ export const ProxyMonitor: React.FC<ProxyMonitorProps> = ({ className }) => {
         loadData();
         let unlistenFn: (() => void) | null = null;
         const setupListener = async () => {
-            unlistenFn = await listen<ProxyRequestLog>('proxy://request', (event) => {
-                const newLog = event.payload;
-                setLogs(prev => [newLog, ...prev].slice(0, 1000));
-                setStats((prev: ProxyStats) => {
-                    const isSuccess = newLog.status >= 200 && newLog.status < 400;
-                    return {
-                        total_requests: prev.total_requests + 1,
-                        success_count: prev.success_count + (isSuccess ? 1 : 0),
-                        error_count: prev.error_count + (isSuccess ? 0 : 1),
-                    };
+            if (!isTauri) return; // Only setup listener in Tauri environment
+            
+            try {
+                const { listen } = await import('@tauri-apps/api/event');
+                unlistenFn = await listen<ProxyRequestLog>('proxy://request', (event) => {
+                    const newLog = event.payload;
+                    setLogs(prev => [newLog, ...prev].slice(0, 1000));
+                    setStats((prev: ProxyStats) => {
+                        const isSuccess = newLog.status >= 200 && newLog.status < 400;
+                        return {
+                            total_requests: prev.total_requests + 1,
+                            success_count: prev.success_count + (isSuccess ? 1 : 0),
+                            error_count: prev.error_count + (isSuccess ? 0 : 1),
+                        };
+                    });
                 });
-            });
+            } catch (e) {
+                console.error('Failed to setup event listener:', e);
+            }
         };
         setupListener();
         return () => { if (unlistenFn) unlistenFn(); };

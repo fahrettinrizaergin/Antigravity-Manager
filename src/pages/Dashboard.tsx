@@ -6,10 +6,12 @@ import { useAccountStore } from '../stores/useAccountStore';
 import CurrentAccount from '../components/dashboard/CurrentAccount';
 import BestAccounts from '../components/dashboard/BestAccounts';
 import AddAccountDialog from '../components/accounts/AddAccountDialog';
-import { save } from '@tauri-apps/plugin-dialog';
 import { request as invoke } from '../utils/request';
 import { showToast } from '../components/common/ToastContainer';
 import { Account } from '../types/account';
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 function Dashboard() {
     const { t } = useTranslation();
@@ -117,6 +119,30 @@ function Dashboard() {
                 return;
             }
 
+            const exportData = accountsToExport.map(acc => ({
+                email: acc.email,
+                refresh_token: acc.token.refresh_token
+            }));
+
+            const content = JSON.stringify(exportData, null, 2);
+
+            if (!isTauri) {
+                // In web environment, trigger download
+                const blob = new Blob([content], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `antigravity_accounts_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(t('dashboard.toast.export_success', { path: a.download }), 'success');
+                return;
+            }
+
+            // Tauri environment - use native dialog
+            const { save } = await import('@tauri-apps/plugin-dialog');
             const path = await save({
                 filters: [{
                     name: 'JSON',
@@ -126,13 +152,6 @@ function Dashboard() {
             });
 
             if (!path) return;
-
-            const exportData = accountsToExport.map(acc => ({
-                email: acc.email,
-                refresh_token: acc.token.refresh_token
-            }));
-
-            const content = JSON.stringify(exportData, null, 2);
 
             await invoke('save_text_file', { path, content });
 

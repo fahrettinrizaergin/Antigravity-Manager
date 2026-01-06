@@ -11,7 +11,9 @@ import { useEffect } from 'react';
 import { useConfigStore } from './stores/useConfigStore';
 import { useAccountStore } from './stores/useAccountStore';
 import { useTranslation } from 'react-i18next';
-import { listen } from '@tauri-apps/api/event';
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 const router = createBrowserRouter([
   {
@@ -58,27 +60,39 @@ function App() {
     }
   }, [config?.language, i18n]);
 
-  // Listen for tray events
+  // Listen for tray events (only in Tauri environment)
   useEffect(() => {
+    if (!isTauri) return;
+
     const unlistenPromises: Promise<() => void>[] = [];
 
-    // 监听托盘切换账号事件
-    unlistenPromises.push(
-      listen('tray://account-switched', () => {
-        console.log('[App] Tray account switched, refreshing...');
-        fetchCurrentAccount();
-        fetchAccounts();
-      })
-    );
+    const setupListeners = async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event');
+        
+        // 监听托盘切换账号事件
+        unlistenPromises.push(
+          listen('tray://account-switched', () => {
+            console.log('[App] Tray account switched, refreshing...');
+            fetchCurrentAccount();
+            fetchAccounts();
+          })
+        );
 
-    // 监听托盘刷新事件
-    unlistenPromises.push(
-      listen('tray://refresh-current', () => {
-        console.log('[App] Tray refresh triggered, refreshing...');
-        fetchCurrentAccount();
-        fetchAccounts();
-      })
-    );
+        // 监听托盘刷新事件
+        unlistenPromises.push(
+          listen('tray://refresh-current', () => {
+            console.log('[App] Tray refresh triggered, refreshing...');
+            fetchCurrentAccount();
+            fetchAccounts();
+          })
+        );
+      } catch (e) {
+        console.error('Failed to setup event listeners:', e);
+      }
+    };
+
+    setupListeners();
 
     // Cleanup
     return () => {

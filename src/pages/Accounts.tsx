@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { save } from '@tauri-apps/plugin-dialog';
 import { request as invoke } from '../utils/request';
-import { join } from '@tauri-apps/api/path';
 import { Search, RefreshCw, Download, Trash2, LayoutGrid, List, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useAccountStore } from '../stores/useAccountStore';
 import { useConfigStore } from '../stores/useConfigStore';
@@ -14,6 +12,9 @@ import Pagination from '../components/common/Pagination';
 import { showToast } from '../components/common/ToastContainer';
 import { Account } from '../types/account';
 import { cn } from '../utils/cn';
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 type FilterType = 'all' | 'pro' | 'ultra' | 'free';
 type ViewMode = 'list' | 'grid';
@@ -398,13 +399,30 @@ function Accounts() {
 
             let path: string | null = null;
 
-            // 2. Determine Path
+            if (!isTauri) {
+                // In web environment, trigger download
+                const blob = new Blob([content], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `antigravity_accounts_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`${t('common.success')}`, 'success');
+                return;
+            }
+
+            // 2. Determine Path (Tauri only)
             if (config?.default_export_path) {
                 // Use default path
+                const { join } = await import('@tauri-apps/api/path');
                 const fileName = `antigravity_accounts_${new Date().toISOString().split('T')[0]}.json`;
                 path = await join(config.default_export_path, fileName);
             } else {
                 // Use Native Dialog
+                const { save } = await import('@tauri-apps/plugin-dialog');
                 path = await save({
                     filters: [{
                         name: 'JSON',
