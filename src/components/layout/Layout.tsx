@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import Navbar from './Navbar';
 import BackgroundTaskRunner from '../common/BackgroundTaskRunner';
 import ToastContainer from '../common/ToastContainer';
@@ -35,6 +36,15 @@ function Layout() {
                     data-tauri-drag-region
                     onMouseDown={handleDragStart}
                 />
+            )}
+            {/* Web mode notification banner */}
+            {!isTauri && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2 flex items-center justify-center gap-2 text-sm">
+                    <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                    <span className="text-yellow-800 dark:text-yellow-300">
+                        Running in web mode. Management features are limited. Download the desktop app for full functionality.
+                    </span>
+                </div>
             )}
             <BackgroundTaskRunner />
             <ToastContainer />
