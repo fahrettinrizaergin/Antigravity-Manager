@@ -24,9 +24,6 @@ target/
 # Documentation
 docs/
 *.md
-README.md
-README_EN.md
-LICENSE
 
 # Test files
 **/*.test.js
