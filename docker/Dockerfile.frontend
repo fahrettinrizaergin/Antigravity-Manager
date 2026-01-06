@@ -1,5 +1,8 @@
 # Dockerfile for Antigravity Tools Frontend (React/Vite)
-# This builds and serves the React frontend as a static site
+#
+# This Dockerfile builds the React frontend as a static site and serves it with nginx.
+# The frontend is built using Vite and served as static files.
+# This is suitable for web-based access to the Antigravity Tools interface.
 
 FROM node:20-slim as builder
 

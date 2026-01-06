@@ -2,6 +2,12 @@
 
 Bu klasör, Antigravity Tools uygulamasının Docker ile dağıtımı için gerekli dosyaları içerir.
 
+## ⚠️ Önemli Not / Important Note
+
+**Türkçe**: Antigravity Tools bir Tauri masaüstü uygulamasıdır. Bu Docker dosyaları, uygulamanın bileşenlerini konteyner ortamında çalıştırmak için bir başlangıç noktası sağlar. Ancak, Tauri'nin masaüstü özellikleri (sistem tepsisi, pencere yönetimi vb.) Docker ortamında çalışmayacaktır. Bu yapılandırma, özellikle proxy sunucusu ve web arayüzünü dağıtmak için tasarlanmıştır.
+
+**English**: Antigravity Tools is a Tauri desktop application. These Docker files provide a starting point for running the application components in a containerized environment. However, Tauri's desktop features (system tray, window management, etc.) will not work in a Docker environment. This configuration is specifically designed for deploying the proxy server and web interface.
+
 ## İçerik
 
 - `Dockerfile.backend` - Rust/Tauri backend proxy sunucusu için Dockerfile

@@ -1,5 +1,11 @@
 # Dockerfile for Antigravity Tools Backend (Rust/Tauri)
-# This builds the Rust backend proxy server
+# 
+# IMPORTANT: This Dockerfile is designed for the backend proxy server component.
+# Note: Antigravity Tools is a Tauri desktop application. This Docker setup
+# attempts to run the backend server in a containerized environment.
+# Desktop-specific features (system tray, window management) will not work.
+#
+# This is a multi-stage build to optimize the final image size.
 
 FROM rust:1.75-slim as builder
 
