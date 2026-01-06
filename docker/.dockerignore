@@ -1,0 +1,51 @@
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build outputs
+dist/
+build/
+target/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+*.md
+README.md
+README_EN.md
+LICENSE
+
+# Test files
+**/*.test.js
+**/*.test.ts
+**/*.spec.js
+**/*.spec.ts
+
+# CI/CD
+.github/
+
+# Misc
+.env
+.env.local
+.env.*.local
+*.log
+
+# macOS specific
+Casks/
+
+# Tauri specific (for frontend build)
+src-tauri/target/
+src-tauri/Cargo.lock
