@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Save, Github, User, MessageCircle, ExternalLink, RefreshCw, Sparkles } from 'lucide-react';
 import { request as invoke } from '../utils/request';
-import { open } from '@tauri-apps/plugin-dialog';
 import { useConfigStore } from '../stores/useConfigStore';
 import { AppConfig } from '../types/config';
 import ModalDialog from '../components/common/ModalDialog';
 import { showToast } from '../components/common/ToastContainer';
 
 import { useTranslation } from 'react-i18next';
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 function Settings() {
     const { t } = useTranslation();
@@ -91,7 +93,13 @@ function Settings() {
     };
 
     const handleSelectExportPath = async () => {
+        if (!isTauri) {
+            showToast('File dialogs are only available in the desktop application', 'error');
+            return;
+        }
+
         try {
+            const { open } = await import('@tauri-apps/plugin-dialog');
             // @ts-ignore
             const selected = await open({
                 directory: true,
@@ -107,7 +115,13 @@ function Settings() {
     };
 
     const handleSelectAntigravityPath = async () => {
+        if (!isTauri) {
+            showToast('File dialogs are only available in the desktop application', 'error');
+            return;
+        }
+
         try {
+            const { open } = await import('@tauri-apps/plugin-dialog');
             const selected = await open({
                 directory: false,
                 multiple: false,

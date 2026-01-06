@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { Plus, Database, Globe, FileClock, Loader2, CheckCircle2, XCircle, Copy, Check } from 'lucide-react';
 import { useAccountStore } from '../../stores/useAccountStore';
 import { useTranslation } from 'react-i18next';
-import { listen } from '@tauri-apps/api/event';
-import { open } from '@tauri-apps/plugin-dialog';
 import { request as invoke } from '../../utils/request';
+
+// Check if running in Tauri environment
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 interface AddAccountDialogProps {
     onAdd: (email: string, refreshToken: string) => Promise<void>;
@@ -46,15 +47,22 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
         }
     }, [isOpen, activeTab]);
 
-    // Listen for OAuth URL
+    // Listen for OAuth URL (only in Tauri environment)
     useEffect(() => {
+        if (!isTauri) return;
+
         let unlisten: (() => void) | undefined;
 
         const setupListener = async () => {
-            unlisten = await listen('oauth-url-generated', (event) => {
-                setOauthUrl(event.payload as string);
-                // 自动复制到剪贴板? 可选，这里只设置状态让用户手动复制
-            });
+            try {
+                const { listen } = await import('@tauri-apps/api/event');
+                unlisten = await listen('oauth-url-generated', (event) => {
+                    setOauthUrl(event.payload as string);
+                    // 自动复制到剪贴板? 可选，这里只设置状态让用户手动复制
+                });
+            } catch (e) {
+                console.error('Failed to setup event listener:', e);
+            }
         };
 
         setupListener();
@@ -66,39 +74,46 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
 
     // Listen for OAuth callback completion (user may open the URL manually without clicking Start)
     useEffect(() => {
+        if (!isTauri) return;
+
         let unlisten: (() => void) | undefined;
 
         const setupListener = async () => {
-            unlisten = await listen('oauth-callback-received', async () => {
-                if (!isOpenRef.current) return;
-                if (activeTabRef.current !== 'oauth') return;
-                if (statusRef.current === 'loading' || statusRef.current === 'success') return;
-                if (!oauthUrlRef.current) return;
+            try {
+                const { listen } = await import('@tauri-apps/api/event');
+                unlisten = await listen('oauth-callback-received', async () => {
+                    if (!isOpenRef.current) return;
+                    if (activeTabRef.current !== 'oauth') return;
+                    if (statusRef.current === 'loading' || statusRef.current === 'success') return;
+                    if (!oauthUrlRef.current) return;
 
-                // Auto-complete: exchange code and save account (no browser open)
-                setStatus('loading');
-                setMessage(`${t('accounts.add.tabs.oauth')}...`);
+                    // Auto-complete: exchange code and save account (no browser open)
+                    setStatus('loading');
+                    setMessage(`${t('accounts.add.tabs.oauth')}...`);
 
-                try {
-                    await completeOAuthLogin();
-                    setStatus('success');
-                    setMessage(`${t('accounts.add.tabs.oauth')} ${t('common.success')}!`);
-                    setTimeout(() => {
-                        setIsOpen(false);
-                        resetState();
-                    }, 1500);
-                } catch (error) {
-                    setStatus('error');
-                    let errorMsg = String(error);
-                    if (errorMsg.includes('Refresh Token') || errorMsg.includes('refresh_token')) {
-                        setMessage(errorMsg);
-                    } else if (errorMsg.includes('Tauri') || errorMsg.includes('环境')) {
-                        setMessage(`环境错误: ${errorMsg}`);
-                    } else {
-                        setMessage(`${t('accounts.add.tabs.oauth')} ${t('common.error')}: ${errorMsg}`);
+                    try {
+                        await completeOAuthLogin();
+                        setStatus('success');
+                        setMessage(`${t('accounts.add.tabs.oauth')} ${t('common.success')}!`);
+                        setTimeout(() => {
+                            setIsOpen(false);
+                            resetState();
+                        }, 1500);
+                    } catch (error) {
+                        setStatus('error');
+                        let errorMsg = String(error);
+                        if (errorMsg.includes('Refresh Token') || errorMsg.includes('refresh_token')) {
+                            setMessage(errorMsg);
+                        } else if (errorMsg.includes('Tauri') || errorMsg.includes('环境')) {
+                            setMessage(`环境错误: ${errorMsg}`);
+                        } else {
+                            setMessage(`${t('accounts.add.tabs.oauth')} ${t('common.error')}: ${errorMsg}`);
+                        }
                     }
-                }
-            });
+                });
+            } catch (e) {
+                console.error('Failed to setup event listener:', e);
+            }
         };
 
         setupListener();
@@ -299,7 +314,14 @@ function AddAccountDialog({ onAdd }: AddAccountDialogProps) {
     };
 
     const handleImportCustomDb = async () => {
+        if (!isTauri) {
+            setStatus('error');
+            setMessage('File dialogs are only available in the desktop application');
+            return;
+        }
+
         try {
+            const { open } = await import('@tauri-apps/plugin-dialog');
             const selected = await open({
                 multiple: false,
                 filters: [{

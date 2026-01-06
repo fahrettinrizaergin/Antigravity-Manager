@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
 import { useConfigStore } from '../../stores/useConfigStore';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 
 export default function ThemeManager() {
     const { config, loadConfig } = useConfigStore();
@@ -11,9 +10,17 @@ export default function ThemeManager() {
         const init = async () => {
             await loadConfig();
             // Show window after a short delay to ensure React has painted
-            setTimeout(async () => {
-                await getCurrentWindow().show();
-            }, 100);
+            // Only in Tauri environment
+            if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+                setTimeout(async () => {
+                    try {
+                        const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                        await getCurrentWindow().show();
+                    } catch (e) {
+                        console.log('Not in Tauri environment, skipping window.show()');
+                    }
+                }, 100);
+            }
         };
         init();
     }, [loadConfig]);
@@ -26,12 +33,15 @@ export default function ThemeManager() {
             const root = document.documentElement;
             const isDark = theme === 'dark';
 
-            // Set Tauri window background color
-            try {
-                const bgColor = isDark ? '#1d232a' : '#FAFBFC';
-                await getCurrentWindow().setBackgroundColor(bgColor);
-            } catch (e) {
-                console.error('Failed to set window background color:', e);
+            // Set Tauri window background color (only in Tauri environment)
+            if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
+                try {
+                    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                    const bgColor = isDark ? '#1d232a' : '#FAFBFC';
+                    await getCurrentWindow().setBackgroundColor(bgColor);
+                } catch (e) {
+                    console.error('Failed to set window background color:', e);
+                }
             }
 
             // Set DaisyUI theme
