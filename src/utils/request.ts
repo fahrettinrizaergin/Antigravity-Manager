@@ -1,7 +1,5 @@
 // Detect if we're running in Tauri environment
-const isTauri = () => {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-};
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 // Lazy import of Tauri API to avoid errors in non-Tauri environments
 let tauriInvoke: ((cmd: string, args?: any) => Promise<any>) | null = null;
@@ -9,7 +7,7 @@ let tauriInvoke: ((cmd: string, args?: any) => Promise<any>) | null = null;
 const getTauriInvoke = async () => {
   if (tauriInvoke) return tauriInvoke;
   
-  if (isTauri()) {
+  if (isTauri) {
     try {
       const tauriApi = await import('@tauri-apps/api/core');
       tauriInvoke = tauriApi.invoke;
@@ -26,9 +24,6 @@ const getTauriInvoke = async () => {
 export async function request<T>(cmd: string, args?: any): Promise<T> {
   try {
     const invoke = await getTauriInvoke();
-    if (!invoke) {
-      throw new Error('Tauri invoke function is not available');
-    }
     return await invoke(cmd, args);
   } catch (error) {
     console.error(`API Error [${cmd}]:`, error);
