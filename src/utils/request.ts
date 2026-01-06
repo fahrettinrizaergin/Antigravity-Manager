@@ -26,6 +26,9 @@ const getTauriInvoke = async () => {
 export async function request<T>(cmd: string, args?: any): Promise<T> {
   try {
     const invoke = await getTauriInvoke();
+    if (!invoke) {
+      throw new Error('Tauri invoke function is not available');
+    }
     return await invoke(cmd, args);
   } catch (error) {
     console.error(`API Error [${cmd}]:`, error);
