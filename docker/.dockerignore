@@ -48,4 +48,3 @@ Casks/
 
 # Tauri specific (for frontend build)
 src-tauri/target/
-src-tauri/Cargo.lock
