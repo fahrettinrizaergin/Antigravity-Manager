@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Docker Compose configuration for Antigravity Tools
 # Note: This is a Tauri desktop application. This Docker setup provides
 # a way to run the backend proxy server and frontend web interface.
